@@ -50,6 +50,7 @@ RUN dpkg --add-architecture i386 && \
     apt-get -y autoremove && \
     apt-get -y clean && \
     rm -rf /var/lib/apt/lists/* && \
+    rm -rf /usr/share/backgrounds/xfce/ && \
     rm -rf /tmp/*
 
 # noVNC のインストール

@@ -1,3 +1,6 @@
+/mirakurun/data/*
+/mirakurun/conf/*
+.env
 EDCB/**/*.bin
 EDCB/**/*.ini
 EDCB/**/*.crt

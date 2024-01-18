@@ -1,5 +1,27 @@
 version: '3.9'
 services:
+  mirakurun:
+    image: ijs01140/mirakurun
+    cap_add:
+      - SYS_ADMIN
+      - SYS_NICE
+    ports:
+      - "40772:40772"
+      - "9229:9229"
+    volumes:
+      - ./mirakurun/conf:/app-config
+      - ./mirakurun/data:/app-data
+    environment:
+      TZ: "Asia/Tokyo"
+    devices:
+      - /dev/bus:/dev/bus
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-file: "1"
+        max-size: 10m
+
   edcb-wine:
     image: edcb-wine
     container_name: EDCB-Wine
@@ -22,3 +44,15 @@ services:
       - type: bind
         source: '/mnt/'
         target: '/mnt/'
+
+  web-bml:
+    image: ijs01140/web-bml
+    environment:
+      MIRAK_URL: http://mirakurun:40772
+      TZ: "Asia/Tokyo"
+    depends_on:
+      - mirakurun
+    ports:
+      - "23234:23234"
+    restart: always
+

@@ -425,8 +425,16 @@ function runOnscreenButtonsScript(){
 
 function runJikkyoScript(commentHeight,commentDuration,replaceTag){
   var danmaku=null;
+  var comm=null;
+  var cbJikkyoOnscr=document.getElementById("cb-jikkyo-onscr");
+  function onclickJikkyoOnscr(){
+    if(comm&&comm.style.display!="none"){
+      if(cbJikkyoOnscr.checked)danmaku.show();
+      else danmaku.hide();
+    }
+  }
+  cbJikkyoOnscr.onclick=onclickJikkyoOnscr;
   checkJikkyoDisplay=function(){
-    var comm=document.getElementById("jk-comm");
     if(comm){
       var cbDatacast=document.getElementById("cb-datacast");
       var cbJikkyo=document.getElementById("cb-jikkyo");
@@ -436,9 +444,9 @@ function runJikkyoScript(commentHeight,commentDuration,replaceTag){
           comm.style.display="none";
         }
       }else if(comm.style.display=="none"){
-        danmaku.show();
         vfull.appendChild(comm);
         comm.style.display=null;
+        onclickJikkyoOnscr();
       }
     }
   };
@@ -449,10 +457,8 @@ function runJikkyoScript(commentHeight,commentDuration,replaceTag){
       checkJikkyoDisplay();
       return;
     }
-    var comm=document.getElementById("jk-comm");
     if(!comm){
       comm=document.createElement("div");
-      comm.id="jk-comm";
       comm.className="jikkyo-comments";
       vfull.appendChild(comm);
     }
@@ -698,6 +704,7 @@ function runVideoScript(aribb24UseSvg,aribb24Option,useDatacast,useJikkyoLog){
       var xhr=null;
       var cbJikkyo=document.getElementById("cb-jikkyo");
       function onclickJikkyo(){
+        cbJikkyo.onclick=onclickJikkyo;
         if(!cbJikkyo.checked){
           toggleJikkyo(false);
           clearTimeout(readTimer);
@@ -720,8 +727,7 @@ function runVideoScript(aribb24UseSvg,aribb24Option,useDatacast,useJikkyoLog){
         };
         xhr.send();
       }
-      onclickJikkyo();
-      cbJikkyo.onclick=onclickJikkyo;
+      setTimeout(onclickJikkyo,500);
     })();
   }
 }
@@ -799,12 +805,17 @@ function runTranscodeScript(useDatacast,useLiveJikkyo,useJikkyoLog,ofssec,fast,p
     }
     if(useLiveJikkyo||useJikkyoLog){
       var cbJikkyo=document.getElementById("cb-jikkyo");
-      cbJikkyo.checked=false;
-      cbJikkyo.onclick=function(){
+      function onclickJikkyo(){
+        if(!cbJikkyo.onclick&&vid.currentTime==0){
+          setTimeout(onclickJikkyo,500);
+          return;
+        }
+        cbJikkyo.onclick=onclickJikkyo;
         if(!cbJikkyo.checked){
           toggleJikkyo(false);
           openSubStream();
           setSendComment(null);
+          document.querySelector('#vid-form input[name="jikkyo"]').value="0";
           return;
         }
         toggleJikkyo(true);
@@ -822,8 +833,49 @@ function runTranscodeScript(useDatacast,useLiveJikkyo,useJikkyoLog,ofssec,fast,p
           });
         }
         openSubStream();
-      };
+        document.querySelector('#vid-form input[name="jikkyo"]').value="1";
+      }
+      setTimeout(onclickJikkyo,500);
     }
+  }
+  var voffset=document.getElementById("vid-offset");
+  if(voffset){
+    var vselect=document.querySelector('#vid-form select[name="offset"]');
+    var vseek=document.getElementById("vid-seek");
+    var vseekLeaved=true;
+    var msList=[];
+    for(var i=0;i<=100;i++){
+      msList[i]=vselect.options[i].textContent.match(/^(?:\d+m\d\ds)?/)[0];
+    }
+    vseek.onmouseleave=function(){
+      vseekLeaved=true;
+      document.getElementById("vid-seek-status").innerText="";
+    };
+    vseek.oninput=function(){
+      vseekLeaved=false;
+      var sec=ofssec+Math.floor(vid.currentTime*fast);
+      var ms=Math.floor(sec/60)+"m"+String(100+sec%60).substring(1)+"s";
+      document.getElementById("vid-seek-status").innerText=ms+"\u2192"+msList[vseek.value]+"|"+vseek.value+"%";
+    };
+    vseek.onchange=function(){
+      vselect.options[vseek.value].selected=true;
+      document.querySelector('#vid-form button[type="submit"]').click();
+    };
+    vid.ontimeupdate=function(){
+      var sec=ofssec+Math.floor(vid.currentTime*fast);
+      var ms=Math.floor(sec/60)+"m"+String(100+sec%60).substring(1)+"s";
+      voffset.innerText="|"+ms;
+      if(vseekLeaved){
+        for(var i=0;;i++){
+          if(i==99||(msList[i]&&("000"+msList[i]).slice(-8)>=("000"+ms).slice(-8))){
+            vseek.value=i;
+            vseek.style.display=null;
+            break;
+          }
+        }
+      }
+    };
+    voffset.innerText="|"+Math.floor(ofssec/60)+"m"+String(100+ofssec%60).substring(1)+"s";
   }
 }
 
@@ -841,6 +893,7 @@ function runHlsScript(aribb24UseSvg,aribb24Option,alwaysUseHls,hlsQuery,hlsMp4Qu
     }else if(cap){
       cap.hide();
     }
+    document.querySelector('#vid-form input[name="caption"]').value=cbCaption.checked?"1":"0";
   }
   if(alwaysUseHls){
     onclickCaption();
@@ -851,7 +904,7 @@ function runHlsScript(aribb24UseSvg,aribb24Option,alwaysUseHls,hlsQuery,hlsMp4Qu
     vid.poster="loading.png";
     waitForHlsStart(document.getElementById("vidsrc").textContent+
       //Excludes Firefox for Android, because playback of non-keyframe fragmented MP4 is jerky.
-      hlsQuery+(/Android.+Firefox/i.test(navigator.userAgent)?"":hlsMp4Query),1000,2000,function(){vid.poster=null;},function(src){
+      hlsQuery+(/Android.+Firefox/i.test(navigator.userAgent)?"":hlsMp4Query),1000,1000,function(){vid.poster=null;},function(src){
       if(Hls.isSupported()){
         var hls=new Hls();
         hls.loadSource(src);
@@ -859,6 +912,22 @@ function runHlsScript(aribb24UseSvg,aribb24Option,alwaysUseHls,hlsQuery,hlsMp4Qu
         hls.on(Hls.Events.MANIFEST_PARSED,function(){vid.play();});
         hls.on(Hls.Events.FRAG_PARSING_METADATA,function(event,data){
           for(var i=0;cap&&i<data.samples.length;i++){cap.pushID3v2Data(data.samples[i].pts,data.samples[i].data);}
+        });
+        var vbitrate=document.getElementById("vid-bitrate");
+        vbitrate.innerText="|?Mbps";
+        var t=-1;
+        var total=0;
+        hls.on(Hls.Events.FRAG_BUFFERED,function(event,data){
+          if(data.stats){
+            var now=data.stats.buffering.end;
+            if(t<0)t=now;
+            else total+=data.stats.total;
+            if(now-t>7000){
+              vbitrate.innerText="|"+(total*1000/((now-t)*1024*128)).toFixed(1)+"Mbps";
+              t=now;
+              total=0;
+            }
+          }
         });
       }else if(vid.canPlayType("application/vnd.apple.mpegurl")){
         vid.src=src;
@@ -873,7 +942,7 @@ function runHlsScript(aribb24UseSvg,aribb24Option,alwaysUseHls,hlsQuery,hlsMp4Qu
       var cbLive=document.getElementById("cb-live");
       if(cbLive)cbLive.checked=true;
       vid.poster="loading.png";
-      waitForHlsStart(document.getElementById("vidsrc").textContent+hlsQuery+hlsMp4Query,1000,2000,function(){vid.poster=null;},function(src){
+      waitForHlsStart(document.getElementById("vidsrc").textContent+hlsQuery+hlsMp4Query,1000,1000,function(){vid.poster=null;},function(src){
         vid.src=src;
       });
     }else{

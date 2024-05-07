@@ -1,11 +1,5 @@
 mirakurun/
 EDCB/
+KonomiTV/
 .git
 *.log
-
-# KonomiTV
-KonomiTV/config.yaml
-KonomiTV/client/node_modules/
-KonomiTV/server/.venv/
-KonomiTV/server/data/*
-KonomiTV/server/thirdparty/

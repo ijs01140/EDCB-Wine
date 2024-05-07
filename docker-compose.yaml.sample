@@ -45,16 +45,16 @@ services:
         source: '/mnt/'
         target: '/mnt/'
 
-  web-bml:
-    image: ijs01140/web-bml
-    environment:
-      MIRAK_URL: http://mirakurun:40772
-      TZ: "Asia/Tokyo"
-    depends_on:
-      - mirakurun
-    ports:
-      - "23234:23234"
-    restart: always
+  # web-bml:
+  #   image: ijs01140/web-bml
+  #   environment:
+  #     MIRAK_URL: http://mirakurun:40772
+  #     TZ: "Asia/Tokyo"
+  #   depends_on:
+  #     - mirakurun
+  #   ports:
+  #     - "23234:23234"
+  #   restart: always
 
   konomitv:
     image: ghcr.io/tsukumijima/konomitv:latest

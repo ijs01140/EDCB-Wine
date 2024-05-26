@@ -2,6 +2,7 @@ version: '3.9'
 services:
   mirakurun:
     image: ijs01140/mirakurun
+    container_name: Mirakurun
     cap_add:
       - SYS_ADMIN
       - SYS_NICE
@@ -47,6 +48,7 @@ services:
 
   # web-bml:
   #   image: ijs01140/web-bml
+  #   container_name: web-bml
   #   environment:
   #     MIRAK_URL: http://mirakurun:40772
   #     TZ: "Asia/Tokyo"

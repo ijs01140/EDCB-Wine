@@ -49,10 +49,10 @@ RUN dpkg --add-architecture i386 && \
     wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources && \
     apt-get update && \
     apt-get install -y \
-        winehq-stable=9.0.0.0~jammy-1 \
-        wine-stable=9.0.0.0~jammy-1 \
-        wine-stable-amd64=9.0.0.0~jammy-1 \
-        wine-stable-i386=9.0.0.0~jammy-1 \
+        winehq-stable=8.0.2~jammy-1 \
+        wine-stable=8.0.2~jammy-1 \
+        wine-stable-amd64=8.0.2~jammy-1 \
+        wine-stable-i386=8.0.2~jammy-1 \
         winetricks && \
     apt-get -y autoremove && \
     apt-get -y clean && \
